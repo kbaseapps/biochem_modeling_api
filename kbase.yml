@@ -1,0 +1,18 @@
+module-name:
+    biochem_modeling_api
+
+module-description:
+    A KBase module
+
+service-language:
+    perl
+
+module-version:
+    0.0.1
+
+owners:
+    [janakakbase]
+
+service-config:
+    dynamic-service: true
+
