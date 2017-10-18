@@ -20,7 +20,7 @@ This sample module contains one small method - filter_contigs.
 
 #BEGIN_HEADER
 use Bio::KBase::AuthToken;
-use Bio::KBase::workspace::Client;
+use Workspace::WorkspaceClient;
 use Config::IniFiles;
 use Data::Dumper;
 use POSIX;
@@ -38,8 +38,9 @@ sub search_solr
 {
     my ($solr_core, $solrurl, $search, $start, $limit, $id, $asc, $method) = @_;
     #print "$solr_core\t $solrurl\t $search\t $start\t$limit\t$method\n";
-    my $url = $solrurl."/$solr_core/select?q=$search*%0A&sort=$asc+asc&start=$start&rows=$limit&fl=id%2Ccode%2Cname%2Cdefinition%2Cequation%2Cnames%2Csearchnames&df=$id&wt=json&indent=true";
+    my $url = $solrurl."/$solr_core/select?q=*$search*%0A&sort=$asc+asc&start=$start&rows=$limit&fl=id%2Ccode%2Cname%2Cdefinition%2Cequation%2Cnames%2Csearchnames&df=$id&wt=json&indent=true";
     #my $url = $solrurl."/$solr_core/select?q=rxn270*%0A&sort=id+asc&start=0&rows=100&fl=id%2Ccode%2Cname%2Cdefinition%2Cequation%2Cnames%2Csearchnames&df=id&wt=json&indent=true";
+    print $url ."\n";
     my $method = 'GET';
     my $jsonf = solr_request ($method, $url);
     return $jsonf;
@@ -219,9 +220,13 @@ sub search_reaction
             $hits_list = $search_response->{response}->{docs};
             print length($search_response->{response}->{docs})."first run $search_response->{response}->{numFound}\n";
 
-            my $search_field = "text";
+            #my $search_field = "text";
+            my $search_field = "searchnames";
+            my $searchword = searchname($params->{search});
             my $asc = "name";
-            $search_response_name = search_solr($solr_core, $solrurl, $params->{search}, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+            #$search_response_name = search_solr($solr_core, $solrurl, $params->{search}, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+            $search_response_name = search_solr($solr_core, $solrurl, $searchword, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+
             push @$hits_list, $_ foreach $search_response_name->{response}->{docs};
         }
 
@@ -242,6 +247,8 @@ sub search_reaction
             hits => $hits_list,
             num_of_hits =>  ($search_response->{response}->{numFound} + $search_response_name->{response}->{numFound})
         };
+
+        print &Dumper ($output);
     #END search_reaction
     my @_bad_returns;
     (ref($output) eq 'HASH') or push(@_bad_returns, "Invalid type for return variable \"output\" (value was \"$output\")");
@@ -343,15 +350,28 @@ sub search_compound
     print &Dumper ($params);
     eval{
         if (defined $params->{search}){
+
+
             my $search_field = "id";
             my $asc = "id";
-            $search_response = search_solr($solr_core, $solrurl, $params->{search}, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+            $search_response = search_solr($solr_core, $solrurl, searchname($params->{search}), $params->{start}, $params->{limit}, $search_field, $asc, $method);
             $hits_list = $search_response->{response}->{docs};
-            my $search_field = "text";
+
+            print &Dumper ($hits_list);
+            #my $search_field = "text";
+            my $search_field = "searchnames";
             my $asc = "name";
-             $search_response_name = search_solr($solr_core, $solrurl, $params->{search}, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+            my $searchword = searchname($params->{search});
+             #$search_response_name = search_solr($solr_core, $solrurl, $params->{search}, $params->{start}, $params->{limit}, $search_field, $asc, $method);
+             print "$searchword\n";
+
+             $search_response_name = search_solr($solr_core, $solrurl, $searchword, $params->{start}, $params->{limit}, $search_field, $asc, $method);
 
             push @$hits_list, $_ foreach $search_response_name->{response}->{docs};
+
+            print &Dumper ($hits_list);
+
+
 
         }
     };
@@ -374,7 +394,7 @@ sub search_compound
             num_of_hits =>  ($search_response->{response}->{numFound} + $search_response_name->{response}->{numFound})
         };
 
-    print &Dumper ($output);
+    #print &Dumper ($output);
 
     #END search_compound
     my @_bad_returns;

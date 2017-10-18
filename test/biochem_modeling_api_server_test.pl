@@ -4,7 +4,7 @@ use Test::More;
 use Config::Simple;
 use Time::HiRes qw(time);
 use Bio::KBase::AuthToken;
-use Bio::KBase::workspace::Client;
+use Workspace::WorkspaceClient;
 use biochem_modeling_api::biochem_modeling_apiImpl;
 
 local $| = 1;
@@ -13,7 +13,7 @@ my $config_file = $ENV{'KB_DEPLOYMENT_CONFIG'};
 my $config = new Config::Simple($config_file)->get_block('biochem_modeling_api');
 my $ws_url = $config->{"workspace-url"};
 my $ws_name = undef;
-my $ws_client = new Bio::KBase::workspace::Client($ws_url,token => $token);
+my $ws_client = new Workspace::WorkspaceClient($ws_url,token => $token);
 my $auth_token = Bio::KBase::AuthToken->new(token => $token, ignore_authrc => 1);
 my $ctx = LocalCallContext->new($token, $auth_token->user_id);
 $biochem_modeling_api::biochem_modeling_apiServer::CallContext = $ctx;
@@ -29,13 +29,13 @@ sub get_ws_name {
 }
 
 my $dropdownRxn ={
-    search => "rxn30",
+    search => "rxn00011",
     limit => 10,
     start => 0
 
 };
 my $dropdownCpd ={
-    search => "cpd001",
+    search => "cpd00510",
     limit => 10,
     start => 0
 
